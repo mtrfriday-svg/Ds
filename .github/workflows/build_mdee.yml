@@ -17,6 +17,7 @@ jobs:
 
       - name: Install Arduino CLI
         run: |
+          mkdir -p "$GITHUB_WORKSPACE/bin"
           curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR="$GITHUB_WORKSPACE/bin" sh
           echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
 
@@ -171,7 +172,7 @@ jobs:
         with:
           sketch-names: esp32_marauder.ino
           arduino-board-fqbn: esp32:esp32:esp32s3:PartitionScheme=min_spiffs,FlashSize=4M,PSRAM=enabled
-          extra-arduino-cli-args: "--warnings none --build-property compiler.cpp.extra_flags='-DMDEE_S3_SUPER_MINI'"
+          extra-arduino-cli-args: "--warnings none --build-property compiler.cpp.extra_flags='-DMDEE_S3_SUPER_MINI' --output-dir ./esp32_marauder/build"
           arduino-platform: esp32:esp32@2.0.11
           platform-url: https://github.com/espressif/arduino-esp32/releases/download/2.0.11/package_esp32_dev_index.json
 
@@ -179,7 +180,7 @@ jobs:
         run: |
           VERSION=$(grep '#define MARAUDER_VERSION' ./esp32_marauder/configs.h | sed -E 's/.*"v([^"]+)"/v\1/' | tr '.' '_')
           DATE=$(date +%Y%m%d)
-          BUILD_DIR=./esp32_marauder/build/esp32.esp32.esp32s3
+          BUILD_DIR=./esp32_marauder/build
           INPUT_BIN=$BUILD_DIR/esp32_marauder.ino.bin
           OUTPUT_BIN=esp32_marauder_${VERSION}_${DATE}_mdee_s3_n4r2_oled6.bin
           mv "$INPUT_BIN" "$BUILD_DIR/$OUTPUT_BIN"
