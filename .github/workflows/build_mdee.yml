@@ -15,6 +15,16 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      - name: Install Arduino CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh -s -- -b "$GITHUB_WORKSPACE/bin"
+          echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
+
+      - name: Install ESP32 core
+        run: |
+          arduino-cli core update-index --additional-urls https://github.com/espressif/arduino-esp32/releases/download/2.0.11/package_esp32_dev_index.json
+          arduino-cli core install esp32:esp32@2.0.11 --additional-urls https://github.com/espressif/arduino-esp32/releases/download/2.0.11/package_esp32_dev_index.json
+
       - name: Install ESP32Ping
         uses: actions/checkout@v2
         with:
