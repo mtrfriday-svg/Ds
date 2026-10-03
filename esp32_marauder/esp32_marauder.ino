@@ -265,6 +265,7 @@ void setup()
 
   #ifdef MDEE_S3_SUPER_MINI
     Wire.begin(MDEE_OLED_SDA, MDEE_OLED_SCL);
+    Wire.setTimeOut(50); // ms - don't let a missing/miswired OLED hang the bus and trip the watchdog
     if (mdee_oled.begin(SSD1306_SWITCHCAPVCC, MDEE_OLED_ADDR)) {
       mdeeOledMessage("M'DEE", "Booting...");
     }
