@@ -176,13 +176,25 @@ jobs:
           arduino-platform: esp32:esp32@2.0.11
           platform-url: https://github.com/espressif/arduino-esp32/releases/download/2.0.11/package_esp32_dev_index.json
 
+      - name: Merge into a single flashable image
+        run: |
+          BUILD_DIR=./esp32_marauder/build
+          BOOT_APP0=$(find /home/runner/.arduino15/packages/esp32/hardware/esp32/2.0.11/tools/partitions -name "boot_app0.bin" | head -n1)
+          python3 -m esptool --chip esp32s3 merge_bin \
+            -o "$BUILD_DIR/merged.bin" \
+            --flash_mode keep --flash_freq keep --flash_size keep \
+            0x0 "$BUILD_DIR/esp32_marauder.ino.bootloader.bin" \
+            0x8000 "$BUILD_DIR/esp32_marauder.ino.partitions.bin" \
+            0xe000 "$BOOT_APP0" \
+            0x10000 "$BUILD_DIR/esp32_marauder.ino.bin"
+
       - name: Rename Artifact
         run: |
           VERSION=$(grep '#define MARAUDER_VERSION' ./esp32_marauder/configs.h | sed -E 's/.*"v([^"]+)"/v\1/' | tr '.' '_')
           DATE=$(date +%Y%m%d)
           BUILD_DIR=./esp32_marauder/build
-          INPUT_BIN=$BUILD_DIR/esp32_marauder.ino.bin
-          OUTPUT_BIN=esp32_marauder_${VERSION}_${DATE}_mdee_s3_n4r2_oled6.bin
+          INPUT_BIN=$BUILD_DIR/merged.bin
+          OUTPUT_BIN=esp32_marauder_${VERSION}_${DATE}_mdee_s3_n4r2_oled6_merged.bin
           mv "$INPUT_BIN" "$BUILD_DIR/$OUTPUT_BIN"
           echo "artifact_name=$OUTPUT_BIN" >> $GITHUB_ENV
           echo "artifact_path=$BUILD_DIR/$OUTPUT_BIN" >> $GITHUB_ENV
