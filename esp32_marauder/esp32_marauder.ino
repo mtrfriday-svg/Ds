@@ -94,6 +94,50 @@ https://www.online-utility.org/image/convert/to/XBM
 #endif
 
 WiFiScan wifi_scan_obj;
+
+#ifdef MDEE_S3_SUPER_MINI
+  static const char* mdeeModeLabel(uint8_t mode) {
+    switch (mode) {
+      case WIFI_SCAN_OFF:            return "Idle";
+      case WIFI_SCAN_PROBE:          return "Scan: Probes";
+      case WIFI_SCAN_AP:             return "Scan: APs";
+      case WIFI_SCAN_PWN:            return "Scan: PwnPkt";
+      case WIFI_SCAN_EAPOL:          return "Scan: EAPOL";
+      case WIFI_SCAN_DEAUTH:         return "Scan: Deauth";
+      case WIFI_SCAN_ALL:            return "Scan: All";
+      case WIFI_PACKET_MONITOR:      return "Packet Monitor";
+      case WIFI_ATTACK_BEACON_SPAM:  return "Attack: Beacon";
+      case WIFI_ATTACK_RICK_ROLL:    return "Attack: RickRoll";
+      case BT_SCAN_ALL:              return "Scan: BT All";
+      case BT_SCAN_SKIMMERS:         return "Scan: Skimmers";
+      case WIFI_ATTACK_DEAUTH:       return "Attack: Deauth";
+      case WIFI_ATTACK_AP_SPAM:      return "Attack: AP Spam";
+      case WIFI_SCAN_EVIL_PORTAL:    return "Evil Portal";
+      case WIFI_SCAN_WAR_DRIVE:      return "War Driving";
+      case BT_SCAN_WAR_DRIVE:        return "BT War Drive";
+      case BT_ATTACK_SOUR_APPLE:     return "Attack: SourApple";
+      case BT_ATTACK_SPAM_ALL:       return "Attack: BT Spam";
+      default:                       return "Active";
+    }
+  }
+
+  static uint8_t mdeeLastMode = 255;
+  static uint32_t mdeeLastOledUpdate = 0;
+
+  static void mdeeOledStatusUpdate() {
+    if (millis() - mdeeLastOledUpdate < 500) return;
+    mdeeLastOledUpdate = millis();
+
+    uint8_t mode = wifi_scan_obj.currentScanMode;
+    if (mode == mdeeLastMode) return; // only redraw on change, keep I2C bus quiet
+    mdeeLastMode = mode;
+
+    char line2[24];
+    snprintf(line2, sizeof(line2), "Heap: %lu", (unsigned long)ESP.getFreeHeap());
+    mdeeOledMessage(mdeeModeLabel(mode), line2);
+  }
+#endif
+
 EvilPortal evil_portal_obj;
 Buffer buffer_obj;
 Settings settings_obj;
@@ -475,6 +519,10 @@ void loop()
   cli_obj.main(currentTime);
   wifi_scan_obj.main(currentTime);
   recon_obj.main(currentTime);
+
+  #ifdef MDEE_S3_SUPER_MINI
+    mdeeOledStatusUpdate();
+  #endif
 
   #ifdef HAS_T_DONGLE_DISPLAY
     t_dongle_display.update(currentTime, wifi_scan_obj);
